@@ -7,12 +7,31 @@ import math
 import time
 import pyvisa as visa
 from ThorlabsPM100 import ThorlabsPM100
+import thorlabs_apt as apt
+
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
 inst = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
 power_meter = ThorlabsPM100(inst=inst)
 
+#----------- Initialising mirror motors----------------------------------#
+upperTopSN = 27004949
+upperBtmSN = 27004956
+lowerTopSN = 27004948
+lowerBtmSN =  2700495
+
+upperTop = apt.Motor(upperTopSN)
+upperBtm = apt.Motor(upperBtmSN)
+lowerTop = apt.Motor(lowerTopSN)
+lowerBtm = apt.Motor(lowerBtmSN)
+
+home_velocity = 1 #homing velocity
+home_position = 3 #homing offset
+upperTop.set_move_home_parameters(HOME_REV, HOMELIMSW_REV, home_velocity, home_position)
+upperBtm.set_move_home_parameters(HOME_REV, HOMELIMSW_REV, home_velocity, home_position)
+lowerTop.set_move_home_parameters(HOME_REV, HOMELIMSW_REV, home_velocity, home_position)
+lowerBtm.set_move_home_parameters(HOME_REV, HOMELIMSW_REV, home_velocity, home_position)
 #---------- Performance checking model functions -----------#
 
 def findplane(x,y,z,x0,y0,z0):
