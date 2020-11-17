@@ -11,6 +11,7 @@ inst = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
 power_meter = ThorlabsPM100(inst=inst)
 
 #----------- Initialising mirror motors----------------------------------#
+print(apt.list_available_devices())
 upperTopSN = 27004949
 upperBtmSN = 27004956
 lowerTopSN = 27004948
@@ -71,17 +72,102 @@ def moveLower(step : float) -> bool:
     lowerBtm.move_by(-step, True)
     return False
 
-def walk(step : float) ->bool:
-    pass
+def walkTop(step : float) ->bool:
+    old_avg : float = timeAvgRead(N)
+
+    #move up upper top, then check lower
+    upperTop.move_by(step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerTop.move_by(-step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg):
+        intm_avg = cur_avg
+        lowerTop.move_by(-step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    lowerTop.move_by(step/2, True)
+    iterations = iterations + 1
+    if(intm_avg > old_avg):
+        return True
+    lowerTop.move_by(step/2 * iterations, True)
+    upperTop.move_by(-step, True)
+
+    #move down upper top, then check lower
+    upperTop.move_by(-step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerTop.move_by(step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg):
+        intm_avg = cur_avg
+        lowerTop.move_by(step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    lowerTop.move_by(-step/2, True)
+    iterations = iterations + 1
+    if(intm_avg > old_avg):
+        return True
+    lowerTop.move_by(-step/2 * iterations, True)
+    upperTop.move_by(step, True)
+
+    return False
+
+def walkBtm(step : float) -> bool:
+    old_avg : float = timeAvgRead(N)
+
+    #move up upper btm, then check lower
+    upperBtm.move_by(step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerBtm.move_by(-step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg):
+        intm_avg = cur_avg
+        lowerBtm.move_by(-step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    lowerBtm.move_by(step/2, True)
+    iterations = iterations + 1
+    if(intm_avg > old_avg):
+        return True
+    lowerBtm.move_by(step/2 * iterations, True)
+    upperBtm.move_by(-step, True)
+
+    #move down upper Btm, then check lower
+    upperBtm.move_by(-step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerBtm.move_by(step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg):
+        intm_avg = cur_avg
+        lowerBtm.move_by(step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    lowerBtm.move_by(-step/2, True)
+    iterations = iterations + 1
+    if(intm_avg > old_avg):
+        return True
+    lowerBtm.move_by(-step/2 * iterations, True)
+    upperBtm.move_by(step, True)
+
+    return False
+
 
 
 
 
 # e : float = 0.001
 # dif : float = 100
-res : int =  .05
+res : int =  .03
 while(moveUpper(res) or moveLower(res)): 
     print(timeAvgRead(10))
-   
+
+while(walkTop(res)): 
+    print(timeAvgRead(10))
+
+while(walkBtm(res)): 
+    print(timeAvgRead(10))
 
 
