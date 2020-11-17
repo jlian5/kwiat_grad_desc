@@ -19,7 +19,7 @@ power_meter = ThorlabsPM100(inst=inst)
 upperTopSN = 27004949
 upperBtmSN = 27004956
 lowerTopSN = 27004948
-lowerBtmSN =  2700495
+lowerBtmSN = 27004958
 
 upperTop = apt.Motor(upperTopSN)
 upperBtm = apt.Motor(upperBtmSN)
@@ -33,6 +33,10 @@ upperTop.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity
 upperBtm.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
 lowerTop.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
 lowerBtm.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
+upperTop.move_home(False)
+upperBtm.move_home(False)
+lowerTop.move_home(False)
+lowerBtm.move_home(False)
 #---------- Performance checking model functions -----------#
 
 def findplane(x,y,z,x0,y0,z0):
