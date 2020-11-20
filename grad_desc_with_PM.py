@@ -34,6 +34,20 @@ home_position = 3 #homing offset
 # lowerTop.move_home(False)
 # lowerBtm.move_home(False)
 #--------------------------------------------------------------------------------------------
+#Test step size:
+upperTopStart = 5
+upperBtmStart = 5.50006
+lowerBtmStart = 5.35
+lowerTopStart = 6.70003
+upperTop.move_to(upperTopStart)
+upperBtm.move_to(upperBtmStart)
+lowerBtm.move_to(lowerBtmStart)
+lowerTop.move_to(lowerTopStart)
+print("take before calibration now")
+for i in range(25):
+    print(str(i) + "...")
+    time.sleep(1)
+#----------------------
 
 N: int = 10
 
@@ -79,6 +93,25 @@ def walkTop(step : float) ->bool:
     upperTop.move_by(step, True)
     intm_avg : float = timeAvgRead(N)
     iterations : int = 1
+    lowerTop.move_by(step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg):
+        intm_avg = cur_avg
+        lowerTop.move_by(step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    #when while loop breaks we moved one iteration too far
+    lowerTop.move_by(-step/2, True)
+    iterations = iterations - 1 #move back one and take one off counter
+    if(intm_avg > old_avg):
+        return True
+    lowerTop.move_by(-step/2 * iterations, True)
+    upperTop.move_by(-step, True)
+
+    #move down upper top, then check lower
+    upperTop.move_by(-step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
     lowerTop.move_by(-step/2, True)
     cur_avg : float = timeAvgRead(N)
     while(cur_avg > intm_avg):
@@ -87,28 +120,10 @@ def walkTop(step : float) ->bool:
         iterations = iterations + 1
         cur_avg = timeAvgRead(N)
     lowerTop.move_by(step/2, True)
-    iterations = iterations + 1
+    iterations = iterations - 1
     if(intm_avg > old_avg):
         return True
     lowerTop.move_by(step/2 * iterations, True)
-    upperTop.move_by(-step, True)
-
-    #move down upper top, then check lower
-    upperTop.move_by(-step, True)
-    intm_avg : float = timeAvgRead(N)
-    iterations : int = 1
-    lowerTop.move_by(step/2, True)
-    cur_avg : float = timeAvgRead(N)
-    while(cur_avg > intm_avg):
-        intm_avg = cur_avg
-        lowerTop.move_by(step/2, True)
-        iterations = iterations + 1
-        cur_avg = timeAvgRead(N)
-    lowerTop.move_by(-step/2, True)
-    iterations = iterations + 1
-    if(intm_avg > old_avg):
-        return True
-    lowerTop.move_by(-step/2 * iterations, True)
     upperTop.move_by(step, True)
 
     return False
@@ -120,24 +135,6 @@ def walkBtm(step : float) -> bool:
     upperBtm.move_by(step, True)
     intm_avg : float = timeAvgRead(N)
     iterations : int = 1
-    lowerBtm.move_by(-step/2, True)
-    cur_avg : float = timeAvgRead(N)
-    while(cur_avg > intm_avg):
-        intm_avg = cur_avg
-        lowerBtm.move_by(-step/2, True)
-        iterations = iterations + 1
-        cur_avg = timeAvgRead(N)
-    lowerBtm.move_by(step/2, True)
-    iterations = iterations + 1
-    if(intm_avg > old_avg):
-        return True
-    lowerBtm.move_by(step/2 * iterations, True)
-    upperBtm.move_by(-step, True)
-
-    #move down upper Btm, then check lower
-    upperBtm.move_by(-step, True)
-    intm_avg : float = timeAvgRead(N)
-    iterations : int = 1
     lowerBtm.move_by(step/2, True)
     cur_avg : float = timeAvgRead(N)
     while(cur_avg > intm_avg):
@@ -146,10 +143,28 @@ def walkBtm(step : float) -> bool:
         iterations = iterations + 1
         cur_avg = timeAvgRead(N)
     lowerBtm.move_by(-step/2, True)
-    iterations = iterations + 1
+    iterations = iterations - 1
     if(intm_avg > old_avg):
         return True
     lowerBtm.move_by(-step/2 * iterations, True)
+    upperBtm.move_by(-step, True)
+
+    #move down upper Btm, then check lower
+    upperBtm.move_by(-step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerBtm.move_by(-step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg):
+        intm_avg = cur_avg
+        lowerBtm.move_by(-step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    lowerBtm.move_by(step/2, True)
+    iterations = iterations - 1
+    if(intm_avg > old_avg):
+        return True
+    lowerBtm.move_by(step/2 * iterations, True)
     upperBtm.move_by(step, True)
 
     return False
@@ -160,14 +175,20 @@ def walkBtm(step : float) -> bool:
 
 # e : float = 0.001
 # dif : float = 100
-res : int =  .03
+res : int =  .002
+iterationSingle : int = 0
 while(moveUpper(res) or moveLower(res)): 
     print(timeAvgRead(10))
+    # iterationSingle = iterationSingle + 1
 
+iterationWalkTop: int = 0
 while(walkTop(res)): 
     print(timeAvgRead(10))
+    # iterationWalkTop = iterationWalkTop + 1
 
+iterationWalkBtm : int = 0
 while(walkBtm(res)): 
     print(timeAvgRead(10))
+    # iterationWalkBtm = iterationWalkBtm + 1
 
 
