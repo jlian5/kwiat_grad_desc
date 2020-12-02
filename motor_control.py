@@ -22,7 +22,7 @@ lowerBtm.move_to(6)
 # upperTop.move_by(1)
 
 #For home = 3
-upperTopStart = 5
-upperBtmStart = 5.50006
-lowerBtmStart = 5.35
-lowerTopStart = 6.70003
+upperTopStart = 5 #49
+upperBtmStart = 5.50006 #56
+lowerTopStart = 6.70003 #48
+lowerBtmStart = 5.35 #58

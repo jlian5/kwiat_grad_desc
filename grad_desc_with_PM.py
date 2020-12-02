@@ -49,7 +49,8 @@ for i in range(25):
     time.sleep(1)
 #----------------------
 
-N: int = 10
+#aux variables
+N: int = 10 #number of power meter reads to average
 
 def timeAvgRead(n : int) -> float:
     tempSum : float = 0.0
@@ -60,31 +61,75 @@ def timeAvgRead(n : int) -> float:
 
 def moveUpper(step : float) -> bool:
     old_avg : float = timeAvgRead(N)
+    counter: int = 0
+    while True:
+        upperTop.move_by(step, True)
+        counter = counter + 1
+        if(timeAvgRead(N) < old_avg): #this will always make setup move one too many iterations
+            upperTop.move_by(-step, True) #move back one iteration
+            break
 
-    upperTop.move_by(step, True)
-    if(timeAvgRead(N) > old_avg):
-        return True
-    upperTop.move_by(-step, True)
+    if counter == 1: #moving top knob forwards was not the right way 
+        while True:
+            upperTop.move_by(-step, True)
+            if(timeAvgRead(N) < old_avg):
+                upperTop.move_by(step, True) #move back one iteration
+                break
+    
+    #same logic for bottom knob
+    old_avg = timeAvgRead(N)
+    counter = 0
+    while True:
+        upperBtm.move_by(step, True)
+        counter = counter + 1
+        if(timeAvgRead(N) < old_avg):
+            upperBtm.move_by(-step, True)
+            break
 
-    upperBtm.move_by(step, True)
-    if(timeAvgRead(N) > old_avg):
-        return True
-    upperBtm.move_by(-step, True)
-    return False
+    if counter == 1:
+        while True:
+            upperBtm.move_by(-step, True)
+            if(timeAvgRead(N) < old_avg):
+                upperBtm.move_by(step, True) #move back one iteration
+                break
+    
+    return True
 
 def moveLower(step : float) -> bool:
     old_avg : float = timeAvgRead(N)
+    counter: int = 0
+    while True:
+        lowerTop.move_by(step, True)
+        counter = counter + 1
+        if(timeAvgRead(N) < old_avg): #this will always make setup move one too many iterations
+            lowerTop.move_by(-step, True) #move back one iteration
+            break
 
-    lowerTop.move_by(step, True)
-    if(timeAvgRead(N) > old_avg):
-        return True
-    lowerTop.move_by(-step, True)
+    if counter == 1: #moving top knob forwards was not the right way 
+        while True:
+            lowerTop.move_by(-step, True)
+            if(timeAvgRead(N) < old_avg):
+                lowerTop.move_by(step, True) #move back one iteration
+                break
+    
+    #same logic for bottom knob
+    old_avg = timeAvgRead(N)
+    counter = 0
+    while True:
+        lowerBtm.move_by(step, True)
+        counter = counter + 1
+        if(timeAvgRead(N) < old_avg):
+            lowerBtm.move_by(-step, True)
+            break
 
-    lowerBtm.move_by(step, True)
-    if(timeAvgRead(N) > old_avg):
-        return True
-    lowerBtm.move_by(-step, True)
-    return False
+    if counter == 1:
+        while True:
+            lowerBtm.move_by(-step, True)
+            if(timeAvgRead(N) < old_avg):
+                lowerBtm.move_by(step, True) #move back one iteration
+                break
+    
+    return True
 
 def walkTop(step : float) ->bool:
     old_avg : float = timeAvgRead(N)

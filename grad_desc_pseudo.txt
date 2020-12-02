@@ -1,0 +1,50 @@
+
+function adjust_upper_mirror(step_size):
+    take time average of initial power reading
+
+    while moving top knob forwards improve time average:
+        move top knod forwards
+
+    if moving top knob forwards made reading worse:
+        while moving top knob backwards improve time average:
+            move top knod backwards
+
+    repeat same procedure to adjust bottom knob
+
+function adjust_bottom_mirror(step_size):
+    //same steps as adjusting upper mirror
+
+function walk_beam_top_knob(step_size):
+    take note of the initial setup state
+    take time average of initial reading
+
+    detune the coarse mirror forwards
+    take intermediate reading
+    while moving fine mirror forwards improve intermediate reading:
+        move fine mirror forwards
+
+    if the optimized intermediate reading is better than initial reading:
+        return
+    //otherwise...
+    return setup to initial state
+
+    detune the coarse mirror backwards
+    take intermediate reading
+    while moving fine mirror backwards improve intermediate reading:
+        move fine mirror backwards
+    if the optimized intermediate reading is WORSE than initial reading:
+        //we cant improve anything
+        return setup to initial state
+    
+    return
+
+function walk_beam_btm_knob(step_size):
+    //same steps as top knob
+
+function main():
+    adjust_upper_mirror(step_size)
+    adjust_bottom_mirror(step_size)
+
+    for(i = 0...N): //repeat loop N times
+        walk_beam_btm_knob(step_size)
+        walk_beam_btm_knob(step_size)
