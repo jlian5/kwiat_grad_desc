@@ -7,8 +7,11 @@ import thorlabs_apt as apt
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
-inst = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
-power_meter = ThorlabsPM100(inst=inst)
+p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
+p3Res = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
+p3 = ThorlabsPM100(inst=p3Res)
+p2 = ThorlabsPM100(inst=p2Res)
+ratio: float = 1.155 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -55,9 +58,9 @@ N: int = 10 #number of power meter reads to average
 def timeAvgRead(n : int) -> float:
     tempSum : float = 0.0
     for i in range(n):
-        tempSum += power_meter.read
+        tempSum += (p2.read / p3.read)
         time.sleep(.01)
-    return tempSum / n
+    return (tempSum / n) * ratio
 
 def moveUpper(step : float) -> bool:
     print("Moving upper top knob")
