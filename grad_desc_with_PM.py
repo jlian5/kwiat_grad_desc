@@ -132,7 +132,7 @@ def moveLower(step : float) -> bool:
         print(f"Moved up {counter} times")
     
     #same logic for bottom knob
-    print("Moving upper bottom knob")
+    print("Moving lower bottom knob")
     old_avg = timeAvgRead(N)
     counter = 0
     while True:
