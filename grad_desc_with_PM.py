@@ -60,6 +60,7 @@ def timeAvgRead(n : int) -> float:
     return tempSum / n
 
 def moveUpper(step : float) -> bool:
+    print("Moving upper top knob")
     old_avg : float = timeAvgRead(N)
     counter: int = 0
     while True:
@@ -68,15 +69,20 @@ def moveUpper(step : float) -> bool:
         if(timeAvgRead(N) < old_avg): #this will always make setup move one too many iterations
             upperTop.move_by(-step, True) #move back one iteration
             break
-
+    print(f"Moved up {counter} times")
     if counter == 1: #moving top knob forwards was not the right way 
+        counter = 0
         while True:
             upperTop.move_by(-step, True)
+            counter = counter+1
             if(timeAvgRead(N) < old_avg):
                 upperTop.move_by(step, True) #move back one iteration
                 break
+    print(f"Moved down {counter} times")
+ 
     
     #same logic for bottom knob
+    print("Moving upper bottom knob")
     old_avg = timeAvgRead(N)
     counter = 0
     while True:
@@ -85,14 +91,16 @@ def moveUpper(step : float) -> bool:
         if(timeAvgRead(N) < old_avg):
             upperBtm.move_by(-step, True)
             break
-
+    print(f"Moved up {counter} times")
     if counter == 1:
+        counter = 0
         while True:
             upperBtm.move_by(-step, True)
+            counter = counter+1
             if(timeAvgRead(N) < old_avg):
                 upperBtm.move_by(step, True) #move back one iteration
                 break
-    
+        print(f"Moved down {counter} times")
     return True
 
 def moveLower(step : float) -> bool:
@@ -134,13 +142,13 @@ def moveLower(step : float) -> bool:
 def walkTop(step : float) ->bool:
     old_avg : float = timeAvgRead(N)
 
-    #move up upper top, then check lower
+    #move up upper top, 
     upperTop.move_by(step, True)
     intm_avg : float = timeAvgRead(N)
     iterations : int = 1
     lowerTop.move_by(step/2, True)
     cur_avg : float = timeAvgRead(N)
-    while(cur_avg > intm_avg):
+    while(cur_avg > intm_avg): #then repeatedly move up lower
         intm_avg = cur_avg
         lowerTop.move_by(step/2, True)
         iterations = iterations + 1
@@ -150,16 +158,48 @@ def walkTop(step : float) ->bool:
     iterations = iterations - 1 #move back one and take one off counter
     if(intm_avg > old_avg):
         return True
-    lowerTop.move_by(-step/2 * iterations, True)
-    upperTop.move_by(-step, True)
-
-    #move down upper top, then check lower
-    upperTop.move_by(-step, True)
+    lowerTop.move_by(-step/2 * iterations, True) #else we want to move fine mirror back to original
+    #---
     intm_avg : float = timeAvgRead(N)
     iterations : int = 1
     lowerTop.move_by(-step/2, True)
     cur_avg : float = timeAvgRead(N)
-    while(cur_avg > intm_avg):
+    while(cur_avg > intm_avg):  #repeatedly move DOWN lower
+        intm_avg = cur_avg
+        lowerTop.move_by(-step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    #when while loop breaks we moved one iteration too far
+    lowerTop.move_by(step/2, True)
+    iterations = iterations - 1 #move back one and take one off counter
+    if(intm_avg > old_avg):
+        return True
+    lowerTop.move_by(step/2 * iterations, True) #else we want to move fine mirror back to original
+    upperTop.move_by(-step, True) #since moving fine mirror both direction does not improve, we have gone in the wrong direction for coarse
+
+    #---------------------
+    #move down upper top, then check lower
+    upperTop.move_by(-step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerTop.move_by(step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg): #repeatedly move UP lower
+        intm_avg = cur_avg
+        lowerTop.move_by(step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    lowerTop.move_by(-step/2, True)
+    iterations = iterations - 1
+    if(intm_avg > old_avg):
+        return True
+    lowerTop.move_by(-step/2 * iterations, True) #reset back to original
+    #------
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerTop.move_by(-step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg): #repeatedly move down lower
         intm_avg = cur_avg
         lowerTop.move_by(-step/2, True)
         iterations = iterations + 1
@@ -168,7 +208,8 @@ def walkTop(step : float) ->bool:
     iterations = iterations - 1
     if(intm_avg > old_avg):
         return True
-    lowerTop.move_by(step/2 * iterations, True)
+    lowerTop.move_by(step/2 * iterations, True) #reset back to original
+    #return upper to original
     upperTop.move_by(step, True)
 
     return False
@@ -176,13 +217,49 @@ def walkTop(step : float) ->bool:
 def walkBtm(step : float) -> bool:
     old_avg : float = timeAvgRead(N)
 
-    #move up upper btm, then check lower
+    #move up upper btm, 
     upperBtm.move_by(step, True)
     intm_avg : float = timeAvgRead(N)
     iterations : int = 1
     lowerBtm.move_by(step/2, True)
     cur_avg : float = timeAvgRead(N)
-    while(cur_avg > intm_avg):
+    while(cur_avg > intm_avg): #then repeatedly move up lower
+        intm_avg = cur_avg
+        lowerBtm.move_by(step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    #when while loop breaks we moved one iteration too far
+    lowerBtm.move_by(-step/2, True)
+    iterations = iterations - 1 #move back one and take one off counter
+    if(intm_avg > old_avg):
+        return True
+    lowerBtm.move_by(-step/2 * iterations, True) #else we want to move fine mirror back to original
+    #---
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerBtm.move_by(-step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg):  #repeatedly move DOWN lower
+        intm_avg = cur_avg
+        lowerBtm.move_by(-step/2, True)
+        iterations = iterations + 1
+        cur_avg = timeAvgRead(N)
+    #when while loop breaks we moved one iteration too far
+    lowerBtm.move_by(step/2, True)
+    iterations = iterations - 1 #move back one and take one off counter
+    if(intm_avg > old_avg):
+        return True
+    lowerBtm.move_by(step/2 * iterations, True) #else we want to move fine mirror back to original
+    upperBtm.move_by(-step, True) #since moving fine mirror both direction does not improve, we have gone in the wrong direction for coarse
+
+    #---------------------
+    #move down upper Btm, then check lower
+    upperBtm.move_by(-step, True)
+    intm_avg : float = timeAvgRead(N)
+    iterations : int = 1
+    lowerBtm.move_by(step/2, True)
+    cur_avg : float = timeAvgRead(N)
+    while(cur_avg > intm_avg): #repeatedly move UP lower
         intm_avg = cur_avg
         lowerBtm.move_by(step/2, True)
         iterations = iterations + 1
@@ -191,16 +268,13 @@ def walkBtm(step : float) -> bool:
     iterations = iterations - 1
     if(intm_avg > old_avg):
         return True
-    lowerBtm.move_by(-step/2 * iterations, True)
-    upperBtm.move_by(-step, True)
-
-    #move down upper Btm, then check lower
-    upperBtm.move_by(-step, True)
+    lowerBtm.move_by(-step/2 * iterations, True) #reset back to original
+    #------
     intm_avg : float = timeAvgRead(N)
     iterations : int = 1
     lowerBtm.move_by(-step/2, True)
     cur_avg : float = timeAvgRead(N)
-    while(cur_avg > intm_avg):
+    while(cur_avg > intm_avg): #repeatedly move down lower
         intm_avg = cur_avg
         lowerBtm.move_by(-step/2, True)
         iterations = iterations + 1
@@ -209,31 +283,25 @@ def walkBtm(step : float) -> bool:
     iterations = iterations - 1
     if(intm_avg > old_avg):
         return True
-    lowerBtm.move_by(step/2 * iterations, True)
+    lowerBtm.move_by(step/2 * iterations, True) #reset back to original
+    #return upper to original
     upperBtm.move_by(step, True)
 
     return False
 
 
 
-
-
-# e : float = 0.001
-# dif : float = 100
 res : int =  .002
-iterationSingle : int = 0
-while(moveUpper(res) or moveLower(res)): 
-    print(timeAvgRead(10))
-    # iterationSingle = iterationSingle + 1
+iterationSingle : int = 3
+iterationWalk: int = 3
 
-iterationWalkTop: int = 0
-while(walkTop(res)): 
-    print(timeAvgRead(10))
-    # iterationWalkTop = iterationWalkTop + 1
 
-iterationWalkBtm : int = 0
-while(walkBtm(res)): 
-    print(timeAvgRead(10))
-    # iterationWalkBtm = iterationWalkBtm + 1
+while i in range(iterationSingle):
+    moveUpper(res)
+    moveLower(res)
+
+while i in range(iterationWalk):
+    walkTop(res)
+    walkBtm(res)
 
 
