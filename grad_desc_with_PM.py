@@ -46,10 +46,10 @@ upperTop.move_to(upperTopStart)
 upperBtm.move_to(upperBtmStart)
 lowerBtm.move_to(lowerBtmStart)
 lowerTop.move_to(lowerTopStart)
-print("take before calibration now")
-for i in range(25):
-    print(str(i) + "...")
-    time.sleep(1)
+# print("take before calibration now")
+# for i in range(25):
+#     print(str(i) + "...")
+#     time.sleep(1)
 #----------------------
 
 #aux variables
@@ -72,7 +72,6 @@ def moveUpper(step : float) -> bool:
         if(timeAvgRead(N) < old_avg): #this will always make setup move one too many iterations
             upperTop.move_by(-step, True) #move back one iteration
             break
-    print(f"Moved up {counter} times")
     if counter == 1: #moving top knob forwards was not the right way 
         counter = 0
         while True:
@@ -81,8 +80,9 @@ def moveUpper(step : float) -> bool:
             if(timeAvgRead(N) < old_avg):
                 upperTop.move_by(step, True) #move back one iteration
                 break
-    print(f"Moved down {counter} times")
- 
+        print(f"Moved down {counter} times")
+    else:
+        print(f"Moved up {counter} times")
     
     #same logic for bottom knob
     print("Moving upper bottom knob")
@@ -94,7 +94,6 @@ def moveUpper(step : float) -> bool:
         if(timeAvgRead(N) < old_avg):
             upperBtm.move_by(-step, True)
             break
-    print(f"Moved up {counter} times")
     if counter == 1:
         counter = 0
         while True:
@@ -104,6 +103,9 @@ def moveUpper(step : float) -> bool:
                 upperBtm.move_by(step, True) #move back one iteration
                 break
         print(f"Moved down {counter} times")
+    else:
+        print(f"Moved up {counter} times")
+
     return True
 
 def moveLower(step : float) -> bool:
@@ -295,15 +297,15 @@ def walkBtm(step : float) -> bool:
 
 
 res : int =  .002
-iterationSingle : int = 3
-iterationWalk: int = 3
+iterationSingle : int = 1
+iterationWalk: int = 1
 
 
-while i in range(iterationSingle):
+for i in range(iterationSingle):
     moveUpper(res)
     moveLower(res)
 
-while i in range(iterationWalk):
+for i in range(iterationWalk):
     walkTop(res)
     walkBtm(res)
 
