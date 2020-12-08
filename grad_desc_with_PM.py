@@ -35,7 +35,7 @@ home_position = 3 #homing offset
 # lowerBtm.move_home(False)
 #--------------------------------------------------------------------------------------------
 #Test step size:
-upperTopStart = 5
+upperTopStart = 5.19998
 upperBtmStart = 5.50006
 lowerBtmStart = 5.35
 lowerTopStart = 6.70003
