@@ -59,7 +59,7 @@ def timeAvgRead(n : int) -> float:
     tempSum : float = 0.0
     for i in range(n):
         tempSum += (p2.read / p3.read)
-        time.sleep(.01)
+        time.sleep(.03)
     return (tempSum / n) * ratio
 
 def moveUpper(step : float) -> bool:
@@ -109,6 +109,7 @@ def moveUpper(step : float) -> bool:
     return True
 
 def moveLower(step : float) -> bool:
+    print("Moving lower top knob")
     old_avg : float = timeAvgRead(N)
     counter: int = 0
     while True:
@@ -119,13 +120,19 @@ def moveLower(step : float) -> bool:
             break
 
     if counter == 1: #moving top knob forwards was not the right way 
+        counter = 0
         while True:
             lowerTop.move_by(-step, True)
+            counter = counter + 1
             if(timeAvgRead(N) < old_avg):
                 lowerTop.move_by(step, True) #move back one iteration
                 break
+        print(f"Moved down {counter} times")
+    else:
+        print(f"Moved up {counter} times")
     
     #same logic for bottom knob
+    print("Moving upper bottom knob")
     old_avg = timeAvgRead(N)
     counter = 0
     while True:
@@ -136,15 +143,21 @@ def moveLower(step : float) -> bool:
             break
 
     if counter == 1:
+        counter = 0
         while True:
             lowerBtm.move_by(-step, True)
+            counter = counter + 1
             if(timeAvgRead(N) < old_avg):
                 lowerBtm.move_by(step, True) #move back one iteration
                 break
-    
+        print(f"Moved down {counter} times")
+    else:
+            print(f"Moved up {counter} times")
+
     return True
 
 def walkTop(step : float) ->bool:
+    print("walking top")
     old_avg : float = timeAvgRead(N)
 
     #move up upper top, 
@@ -220,6 +233,7 @@ def walkTop(step : float) ->bool:
     return False
 
 def walkBtm(step : float) -> bool:
+    print("walking btm")
     old_avg : float = timeAvgRead(N)
 
     #move up upper btm, 
