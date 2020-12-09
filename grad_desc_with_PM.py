@@ -32,10 +32,10 @@ home_position = 3 #homing offset
 # upperBtm.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
 # lowerTop.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
 # lowerBtm.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
-# upperTop.move_home(False)
-# upperBtm.move_home(False)
-# lowerTop.move_home(False)
-# lowerBtm.move_home(False)
+# upperTop.move_home(True)
+# upperBtm.move_home(True)
+# lowerTop.move_home(True)
+# lowerBtm.move_home(True)
 #--------------------------------------------------------------------------------------------
 #Test step size:
 upperTopStart = 5.19998
@@ -55,12 +55,18 @@ lowerTop.move_to(lowerTopStart)
 #aux variables
 N: int = 10 #number of power meter reads to average
 
+#for graphing purposes
+reading: list = []#the reading at the i-th increment
 def timeAvgRead(n : int) -> float:
+    global reading
     tempSum : float = 0.0
     for i in range(n):
         time.sleep(.03)
         tempSum += (p2.read / p3.read)
-    return (tempSum / n) * ratio
+
+    res: float = (tempSum / n) * ratio
+    reading.append(res)
+    return res
 
 def moveUpper(step : float) -> bool:
     print("Moving upper top knob")
@@ -344,7 +350,7 @@ def walkBtm(step : float) -> bool:
 
 
 
-res : int =  .002
+res : int =  .2
 iterationSingle : int = 1
 iterationWalk: int = 1
 
@@ -364,3 +370,7 @@ for i in range(iterationWalk):
         print(f"reading is {timeAvgRead(N)}")
 
 print(f"final reading is {timeAvgRead(N)}")
+
+import matplotlib.pyplot as plt
+plt.plot(reading)
+plt.show()
