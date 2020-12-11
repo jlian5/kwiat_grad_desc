@@ -11,7 +11,7 @@ p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
 p3Res = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res)
 p2 = ThorlabsPM100(inst=p2Res)
-ratio: float = 1.155 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
+ratio: float = 1.01 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -38,10 +38,14 @@ home_position = 3 #homing offset
 # lowerBtm.move_home(True)
 #--------------------------------------------------------------------------------------------
 #Test step size:
-upperTopStart = 5.19998
-upperBtmStart = 5.50006
-lowerBtmStart = 5.35
-lowerTopStart = 6.70003
+# upperTopStart = 4.82002
+# upperBtmStart = 4.55017
+# lowerBtmStart = 4.14013
+# lowerTopStart = 6.9
+upperTopStart = 4.88984
+upperBtmStart = 4.55023
+lowerBtmStart = 4.17010
+lowerTopStart = 6.86984
 upperTop.move_to(upperTopStart)
 upperBtm.move_to(upperBtmStart)
 lowerBtm.move_to(lowerBtmStart)
@@ -350,7 +354,7 @@ def walkBtm(step : float) -> bool:
 
 
 
-res : int =  .2
+res : int =  .02
 iterationSingle : int = 1
 iterationWalk: int = 1
 
