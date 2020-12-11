@@ -14,28 +14,55 @@ function adjust_upper_mirror(step_size):
 function adjust_bottom_mirror(step_size):
     //same steps as adjusting upper mirror
 
-function walk_beam_top_knob(step_size):
+function walk_beam_top_knob(step_size, last_iteration):
     take note of the initial setup state
     take time average of initial reading
 
-    detune the coarse mirror forwards
-    take intermediate reading
-    while moving fine mirror forwards improve intermediate reading:
-        move fine mirror forwards
+    if last_iteration == forward or NULL    //last time we walked we found that detuning the coarse mirror forward gave good result
+        detune the coarse mirror forwards
+        take intermediate reading
+        while moving fine mirror forwards improve intermediate reading:
+            move fine mirror forwards
 
-    if the optimized intermediate reading is better than initial reading:
-        return
-    //otherwise...
-    return setup to initial state
+        if the optimized intermediate reading is better than initial reading:
+            last_iteration = forward
+            return
 
-    detune the coarse mirror backwards
-    take intermediate reading
-    while moving fine mirror backwards improve intermediate reading:
-        move fine mirror backwards
-    if the optimized intermediate reading is WORSE than initial reading:
-        //we cant improve anything
-        return setup to initial state
-    
+        else         //otherwise...
+            return fine mirror to original state
+            while moving fine mirror BACKWARDS improve intermediate reading:
+                move fine mirror backwards
+            
+            if the optimized intermediate reading is better than initial reading:
+                last_iteration = forward
+                return
+
+            else 
+                return setup to initial state
+
+    if last_iteration == backward or NULL
+        detune the coarse mirror backwards
+        take intermediate reading
+        while moving fine mirror backwards improve intermediate reading:
+            move fine mirror backwards
+        if the optimized intermediate reading is better than initial reading:
+            last_iteration = backward
+            return
+
+        else         //otherwise...
+            return fine mirror to original state
+            while moving fine mirror BACKWARDS improve intermediate reading:
+                move fine mirror backwards
+            
+            if the optimized intermediate reading is better than initial reading:
+                last_iteration = backward
+                return
+
+            else 
+                return setup to initial state
+            
+    //we couldn't improve any readings
+    last_iteration = NULL
     return
 
 function walk_beam_btm_knob(step_size):
