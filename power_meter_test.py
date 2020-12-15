@@ -4,8 +4,8 @@ import pyvisa as visa
 import time
 from ThorlabsPM100 import ThorlabsPM100
 rm = visa.ResourceManager()
-rightRes = rm.open_resource('USB::0x1313::0x8078::P0025003::INSTR', timeout=0)
-dnRes = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
+dnRes = rm.open_resource('USB::0x1313::0x8078::P0025003::INSTR', timeout=0)
+rightRes = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
 # print(rm.list_resources('?*'))
 # inst =rm.open_resource('USB0::0x0000::0x0000::DG5Axxxxxxxxx::INSTR', timeout=1)
 p3 = ThorlabsPM100(inst=dnRes)

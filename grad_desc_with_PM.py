@@ -7,11 +7,11 @@ import thorlabs_apt as apt
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
-p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
-p3Res = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
+p3Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
+p2Res = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res)
 p2 = ThorlabsPM100(inst=p2Res)
-ratio: float = 1.01 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
+ratio: float = 1.046 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -43,18 +43,18 @@ home_position = 3 #homing offset
 # lowerBtmStart = 4.14013
 # lowerTopStart = 6.9
 upperTopStart = 4.88984
-upperBtmStart = 4.55023
+upperBtmStart = 4.75020
 lowerBtmStart = 4.17010
 lowerTopStart = 6.86984
-upperTop.move_to(upperTopStart)
-upperBtm.move_to(upperBtmStart)
-lowerBtm.move_to(lowerBtmStart)
-lowerTop.move_to(lowerTopStart)
+# upperTop.move_to(upperTopStart)
+# upperBtm.move_to(upperBtmStart)
+# lowerBtm.move_to(lowerBtmStart)
+# lowerTop.move_to(lowerTopStart)
 # print("take before calibration now")
 # for i in range(25):
-#     print(str(i) + "...")
-#     time.sleep(1)
-#----------------------
+    # print(str(i) + "...")
+    # time.sleep(1)
+# ----------------------
 
 #aux variables
 N: int = 10 #number of power meter reads to average
