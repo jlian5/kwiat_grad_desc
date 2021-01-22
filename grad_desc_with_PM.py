@@ -7,11 +7,11 @@ import thorlabs_apt as apt
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
-p3Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
-p2Res = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
+p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
+p3Res = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res)
 p2 = ThorlabsPM100(inst=p2Res)
-ratio: float = 1.046 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
+ratio: float = .972 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -38,10 +38,10 @@ home_position = 3 #homing offset
 # lowerBtm.move_home(True)
 #--------------------------------------------------------------------------------------------
 #Test step size:
-# upperTopStart = 4.82002
-# upperBtmStart = 4.55017
-# lowerBtmStart = 4.14013
-# lowerTopStart = 6.9
+smUpTop = 5.2695
+smUpBtm = 5.0003
+smLowTop = 6.60987
+smLowBtm = 4.51012
 upperTopStart = 4.88984
 upperBtmStart = 4.75020
 lowerBtmStart = 4.17010
@@ -98,7 +98,7 @@ def moveUpper(step : float) -> bool:
         print(f"Moved down {counter} times")
     else:
         print(f"Moved up {counter} times")
-    
+    print(f"reading is {timeAvgRead(N)}")
     #same logic for bottom knob
     print("Moving upper bottom knob")
     old_avg = timeAvgRead(N)
@@ -354,9 +354,9 @@ def walkBtm(step : float) -> bool:
 
 
 
-res : int =  .02
+res : int =  .00005
 iterationSingle : int = 1
-iterationWalk: int = 1
+iterationWalk: int = 2
 
 print(f"initial reading is {timeAvgRead(N)}")
 for i in range(iterationSingle):
