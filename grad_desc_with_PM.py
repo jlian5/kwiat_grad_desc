@@ -5,14 +5,20 @@ import pyvisa as visa
 from ThorlabsPM100 import ThorlabsPM100
 import thorlabs_apt as apt
 import inspect
+from typing import Callable
+
+#TODO Record start positions of each and log to file
+#TODO variable step size requires keeping track of previous steps, implement
+
+#TODO TEST DEBUGGING STATEMENTS
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
 p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
-p3Res = rm.open_resource('USB::0x1313::0x8078::P0027639::INSTR', timeout=0)
+p3Res = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res)
 p2 = ThorlabsPM100(inst=p2Res)
-ratio: float = .972 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
+ratio: float = .9966 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -39,18 +45,20 @@ home_position = 3 #homing offset
 # lowerBtm.move_home(True)
 #--------------------------------------------------------------------------------------------
 #Test step size:
-smUpTop = 5.2695
-smUpBtm = 5.0003
-smLowTop = 6.60987
-smLowBtm = 4.51012
+smUpTop = 5.25668
+smUpBtm = 4.83608
+smLowTop = 6.64995
+smLowBtm = 4.34177
+
 upperTopStart = 4.88984
 upperBtmStart = 4.75020
-lowerBtmStart = 4.17010
 lowerTopStart = 6.86984
+lowerBtmStart = 4.17010
 # upperTop.move_to(upperTopStart)
 # upperBtm.move_to(upperBtmStart)
 # lowerBtm.move_to(lowerBtmStart)
 # lowerTop.move_to(lowerTopStart)
+# exit()
 # print("take before calibration now")
 # for i in range(25):
     # print(str(i) + "...")
@@ -72,19 +80,20 @@ def timeAvgRead(n : int) -> float:
     res: float = (tempSum / n) * ratio
     reading.append(res)
     if __debug__:
+        input()
         print(f"caller is {inspect.stack()[1][3]}")
         print(f"Current reading: {res} @ count {len(reading)}")
     return res
 
-def my_getRes(baseRes : float = 0.005) -> float:
+def my_getRes(baseRes : float = 0.03) -> float:
     global N
     curr : float = timeAvgRead(N)
-    if ((1-curr) * baseRes) < .00005:
+    if ((1-curr)**2 * baseRes) < .00005:
         return .00005
     return (1-curr) * baseRes
 
 
-def moveUpper(getRes : function) -> bool:
+def moveUpper(getRes : Callable[[float],float]) -> bool:
     print("Moving upper top knob")
     old_avg : float = timeAvgRead(N)
     original_avg: float = old_avg
@@ -139,7 +148,7 @@ def moveUpper(getRes : function) -> bool:
 
     return True
 
-def moveLower(getRes : function) -> bool:
+def moveLower(getRes : Callable[[float],float]) -> bool:
     print("Moving lower top knob")
     old_avg : float = timeAvgRead(N)
     counter: int = 0
@@ -194,7 +203,7 @@ def moveLower(getRes : function) -> bool:
     return True
 
 walkTopMode: str = ""
-def walkTop(getRes : function) ->bool:
+def walkTop(getRes : Callable[[float],float]) ->bool:
     global walkTopMode
     print("walking top")
     if(walkTopMode == "" or walkTopMode == "forward"):
@@ -280,7 +289,7 @@ def walkTop(getRes : function) ->bool:
     return False
 
 walkBtmMode: str = ""
-def walkBtm(getRes : function) -> bool:
+def walkBtm(getRes : Callable[[float],float]) -> bool:
     global walkBtmMode
     print("walking btm")
     if(walkBtmMode == "" or walkBtmMode == "forward"):
@@ -372,20 +381,20 @@ iterationWalk: int = 2
 initial : float = timeAvgRead(N)
 print(f"initial reading is {initial}")
 
-default_res = lambda : .0005
+default_res = lambda : .0055
 
 for i in range(iterationSingle):
-    moveLower(my_getRes)
+    moveLower(default_res)
     print(f"reading is {timeAvgRead(N)}")
-    moveUpper(my_getRes)
+    moveUpper(default_res)
     print(f"reading is {timeAvgRead(N)}")
 
     
 
 for i in range(iterationWalk):
-    while walkTop(my_getRes):
+    while walkTop(default_res):
         print(f"reading is {timeAvgRead(N)}")
-    while walkBtm(my_getRes):
+    while walkBtm(default_res):
         print(f"reading is {timeAvgRead(N)}")
 
 print(f"final reading is {timeAvgRead(N)}")
