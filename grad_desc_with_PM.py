@@ -68,6 +68,7 @@ lowerBtmStart = 4.17010
 #aux variables
 N: int = 10 #number of power meter reads to average
 
+#aux functions
 #for graphing purposes
 reading: list = []#the reading at the i-th increment
 def timeAvgRead(n : int) -> float:
@@ -80,9 +81,9 @@ def timeAvgRead(n : int) -> float:
     res: float = (tempSum / n) * ratio
     reading.append(res)
     if __debug__:
-        input()
         print(f"caller is {inspect.stack()[1][3]}")
         print(f"Current reading: {res} @ count {len(reading)}")
+        input()
     return res
 
 def my_getRes(baseRes : float = 0.03) -> float:
@@ -92,6 +93,49 @@ def my_getRes(baseRes : float = 0.03) -> float:
         return .00005
     return (1-curr) * baseRes
 
+def get_curr_config() -> dict:
+    res : dict = {}
+    res["ut"] = upperTop.position
+    res["ub"] = upperBtm.position
+    res["lt"] = lowerTop.position
+    res["lb"] = lowerBtm.position
+    return res
+
+def reset_config(target : dict):
+    upperTop.move_to(res["ut"])
+    upperBtm.move_to(res["ub"])
+    lowerTop.move_to(res["lt"])
+    lowerBtm.move_to(res["lb"])
+
+def optimize_knob(knob,getRes : Callable[[float],float]) -> int:
+    forward: int = optimize_direction(knob, getRes, True)
+    if(forward > 0):
+        return forward
+    return optimize_direction(knob, getRes, False)
+
+def optimize_direction(knob, getRes : Callable[[float],float], forward: bool) -> int:
+    multiplier : int = 1 if forward else -1
+    iterations : int = 0
+    initial_pos : dict = get_curr_config()
+    init_reading : float = timeAvgRead(N)
+
+    while True:
+        intm_pos : dict = get_curr_config()
+        knob.move_by( multiplier * getRes(), True)
+
+        if timeAvgRead(N) < init_reading:
+            reset_config(intm_pos)
+            break
+        else:
+            iterations += 1
+    
+    return iterations
+
+
+
+
+
+
 
 def moveUpper(getRes : Callable[[float],float]) -> bool:
     print("Moving upper top knob")
@@ -99,21 +143,25 @@ def moveUpper(getRes : Callable[[float],float]) -> bool:
     original_avg: float = old_avg
     counter: int = 0
     while True:
+        intm_upper_top : dict = get_curr_config()
         upperTop.move_by(getRes(), True)
         counter = counter + 1
         tempAvg: float = timeAvgRead(N)
         if(tempAvg < old_avg): #this will always make setup move one too many iterations
-            upperTop.move_by(-getRes(), True) #move back one iteration
+            # upperTop.move_by(-getRes(), True) #move back one iteration
+            reset_config(intm_upper_top)
             break
         old_avg = tempAvg
     if counter == 1: #moving top knob forwards was not the right way 
         counter = 0
         while True:
+            intm_upper_top = get_curr_config()
             upperTop.move_by(-getRes(), True)
             counter = counter+1
             tempAvg = timeAvgRead(N)
             if(tempAvg < old_avg):
-                upperTop.move_by(getRes(), True) #move back one iteration
+                # upperTop.move_by(getRes(), True) #move back one iteration
+                reset_config(intm_upper_top)
                 break
             old_avg = tempAvg
         print(f"Moved down {counter} times")
@@ -125,21 +173,25 @@ def moveUpper(getRes : Callable[[float],float]) -> bool:
     old_avg = timeAvgRead(N)
     counter = 0
     while True:
+        intm_upper_btm : dict = get_curr_config()
         upperBtm.move_by(getRes(), True)
         counter = counter + 1
         tempAvg = timeAvgRead(N)
         if(tempAvg < old_avg):
-            upperBtm.move_by(-getRes(), True)
+            # upperBtm.move_by(-getRes(), True)
+            reset_config(intm_upper_btm)
             break
         old_avg = tempAvg
     if counter == 1:
+        intm_upper_btm = get_curr_config()
         counter = 0
         while True:
             upperBtm.move_by(-getRes(), True)
             counter = counter+1
             tempAvg = timeAvgRead(N)
             if(tempAvg < old_avg):
-                upperBtm.move_by(getRes(), True) #move back one iteration
+                # upperBtm.move_by(getRes(), True) #move back one iteration
+                reset_config(intm_upper_btm)
                 break
             old_avg = tempAvg
         print(f"Moved down {counter} times")
@@ -153,21 +205,25 @@ def moveLower(getRes : Callable[[float],float]) -> bool:
     old_avg : float = timeAvgRead(N)
     counter: int = 0
     while True:
+        intm_lower_top : dict = get_curr_config()
         lowerTop.move_by(getRes(), True)
         counter = counter + 1
         tempAvg: float = timeAvgRead(N)
         if(tempAvg < old_avg): #this will always make setup move one too many iterations
-            lowerTop.move_by(-getRes(), True) #move back one iteration
+            # lowerTop.move_by(-getRes(), True) #move back one iteration
+            reset_config(intm_lower_top)
             break
         old_avg = tempAvg
     if counter == 1: #moving top knob forwards was not the right way 
         counter = 0
         while True:
+            intm_lower_top = get_curr_config()
             lowerTop.move_by(-getRes(), True)
             counter = counter + 1
             tempAvg = timeAvgRead(N)
             if(tempAvg < old_avg):
-                lowerTop.move_by(getRes(), True) #move back one iteration
+                # lowerTop.move_by(getRes(), True) #move back one iteration
+                reset_config(intm_lower_top)
                 break
             old_avg = tempAvg
         print(f"Moved down {counter} times")
@@ -179,21 +235,25 @@ def moveLower(getRes : Callable[[float],float]) -> bool:
     old_avg = timeAvgRead(N)
     counter = 0
     while True:
+        intm_lower_btm : dict = get_curr_config()
         lowerBtm.move_by(getRes(), True)
         counter = counter + 1
         tempAvg = timeAvgRead(N)
         if(tempAvg < old_avg):
-            lowerBtm.move_by(-getRes(), True)
+            # lowerBtm.move_by(-getRes(), True)
+            reset_config(intm_lower_btm)
             break
         old_avg = tempAvg
     if counter == 1:
         counter = 0
         while True:
+            intm_lower_btm = get_curr_config()
             lowerBtm.move_by(-getRes(), True)
             counter = counter + 1
             tempAvg = timeAvgRead(N)
             if(tempAvg < old_avg):
-                lowerBtm.move_by(getRes(), True) #move back one iteration
+                reset_config(intm_lower_btm)
+                # lowerBtm.move_by(getRes(), True) #move back one iteration
                 break
             old_avg = tempAvg
         print(f"Moved down {counter} times")
@@ -206,6 +266,7 @@ walkTopMode: str = ""
 def walkTop(getRes : Callable[[float],float]) ->bool:
     global walkTopMode
     print("walking top")
+    top_knob_init : dict = get_curr_config()
     if(walkTopMode == "" or walkTopMode == "forward"):
         old_avg : float = timeAvgRead(N)
 
@@ -213,38 +274,47 @@ def walkTop(getRes : Callable[[float],float]) ->bool:
         lowerTop.move_by(getRes(), True)
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lt_init : dict = get_curr_config()
+        lt_intm : dict = get_curr_config()
         upperTop.move_by(getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg): #then repeatedly move up upper
             intm_avg = cur_avg
             upperTop.move_by(getRes()/2, True)
-            iterations = iterations + 1
+            iterations += 1
             cur_avg = timeAvgRead(N)
         #when while loop breaks we moved one iteration too far
-        upperTop.move_by(-getRes()/2, True)
+        # upperTop.move_by(-getRes()/2, True)
+        reset_config(lt_intm)
         iterations = iterations - 1 #move back one and take one off counter
         if(intm_avg > old_avg):
             walkTopMode = "forward"
             return True
-        upperTop.move_by(-getRes()/2 * iterations, True) #else we want to move fine mirror back to original
+        # upperTop.move_by(-getRes()/2 * iterations, True) 
+        reset_config(lt_init)#else we want to move fine mirror back to original
         #---
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lt_init = get_curr_config()
+        lt_intm = get_curr_config()
         upperTop.move_by(-getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg):  #repeatedly move DOWN upper
             intm_avg = cur_avg
+            lt_intm = get_curr_config()
             upperTop.move_by(-getRes()/2, True)
             iterations = iterations + 1
             cur_avg = timeAvgRead(N)
         #when while loop breaks we moved one iteration too far
-        upperTop.move_by(getRes()/2, True)
+        # upperTop.move_by(getRes()/2, True)
+        reset_config(lt_intm)
         iterations = iterations - 1 #move back one and take one off counter
         if(intm_avg > old_avg):
             walkTopMode = "forward"
             return True
-        upperTop.move_by(getRes()/2 * iterations, True) #else we want to move fine mirror back to original
-        lowerTop.move_by(-getRes(), True) #since moving fine mirror both direction does not improve, we have gone in the wrong direction for coarse
+        # upperTop.move_by(getRes()/2 * iterations, True) 
+        reset_config(top_knob_init)
+        # lowerTop.move_by(-getRes(), True) #since moving fine mirror both direction does not improve, we have gone in the wrong direction for coarse
 
     if(walkTopMode == "" or walkTopMode == "backward"):
         #---------------------
@@ -253,37 +323,47 @@ def walkTop(getRes : Callable[[float],float]) ->bool:
         lowerTop.move_by(-getRes(), True)
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lt_init : dict = get_curr_config()
+        lt_intm : dict = get_curr_config()
         upperTop.move_by(getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg): #repeatedly move UP upper
             intm_avg = cur_avg
+            lt_intm = get_curr_config()
             upperTop.move_by(getRes()/2, True)
             iterations = iterations + 1
             cur_avg = timeAvgRead(N)
-        upperTop.move_by(-getRes()/2, True)
+        # upperTop.move_by(-getRes()/2, True)
+        reset_config(lt_intm)
         iterations = iterations - 1
         if(intm_avg > old_avg):
             walkTopMode = "backward"
             return True
-        upperTop.move_by(-getRes()/2 * iterations, True) #reset back to original
+        # upperTop.move_by(-getRes()/2 * iterations, True) 
+        reset_config(lt_init)#reset back to original
         #------
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lt_init = get_curr_config()
+        lt_intm = get_curr_config()
         upperTop.move_by(-getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg): #repeatedly move down upper
             intm_avg = cur_avg
+            lt_intm = get_curr_config()
             upperTop.move_by(-getRes()/2, True)
             iterations = iterations + 1
             cur_avg = timeAvgRead(N)
-        upperTop.move_by(getRes()/2, True)
+        # upperTop.move_by(getRes()/2, True)
+        reset_config(lt_intm)
         iterations = iterations - 1
         if(intm_avg > old_avg):
             walkTopMode = "backward"
             return True
-        upperTop.move_by(getRes()/2 * iterations, True) #reset back to original
-        #return lower to original
-        lowerTop.move_by(getRes(), True)
+        # upperTop.move_by(getRes()/2 * iterations, True) #reset back to original
+        # #return lower to original
+        # lowerTop.move_by(getRes(), True)
+        reset_config(top_knob_init)
     
     walkTopMode = ""
     return False
@@ -292,44 +372,55 @@ walkBtmMode: str = ""
 def walkBtm(getRes : Callable[[float],float]) -> bool:
     global walkBtmMode
     print("walking btm")
+    btm_knob_int : dict = get_curr_config()
     if(walkBtmMode == "" or walkBtmMode == "forward"):
         old_avg : float = timeAvgRead(N)
         #move up lower btm, 
         lowerBtm.move_by(getRes(), True)
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lb_init : dict = get_curr_config()
+        lb_intm : dict = get_curr_config()
         upperBtm.move_by(getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg): #then repeatedly move up upper
             intm_avg = cur_avg
+            lb_intm = get_curr_config()
             upperBtm.move_by(getRes()/2, True)
             iterations = iterations + 1
             cur_avg = timeAvgRead(N)
         #when while loop breaks we moved one iteration too far
-        upperBtm.move_by(-getRes()/2, True)
+        reset_config(lb_intm)
         iterations = iterations - 1 #move back one and take one off counter
         if(intm_avg > old_avg):
             walkBtmMode = "forward"
             return True
-        upperBtm.move_by(-getRes()/2 * iterations, True) #else we want to move fine mirror back to original
+        # upperBtm.move_by(-getRes()/2 * iterations, True) #else we want to move fine mirror back to original
+        reset_config(lb_init)
+       
         #---
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lb_init : dict = get_curr_config()
+        lb_intm : dict = get_curr_config()
         upperBtm.move_by(-getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg):  #repeatedly move DOWN upper
             intm_avg = cur_avg
+            lb_intm = get_curr_config()
             upperBtm.move_by(-getRes()/2, True)
             iterations = iterations + 1
             cur_avg = timeAvgRead(N)
         #when while loop breaks we moved one iteration too far
-        upperBtm.move_by(getRes()/2, True)
+        # upperBtm.move_by(getRes()/2, True)
+        reset_config(lb_intm)
         iterations = iterations - 1 #move back one and take one off counter
         if(intm_avg > old_avg):
             walkBtmMode = "forward"
             return True
-        upperBtm.move_by(getRes()/2 * iterations, True) #else we want to move fine mirror back to original
-        lowerBtm.move_by(-getRes(), True) #since moving fine mirror both direction does not improve, we have gone in the wrong direction for coarse
+        # upperBtm.move_by(getRes()/2 * iterations, True) #else we want to move fine mirror back to original
+        # lowerBtm.move_by(-getRes(), True) #since moving fine mirror both direction does not improve, we have gone in the wrong direction for coarse
+        reset_config(btm_knob_int)
         
     if(walkBtmMode == "" or walkBtmMode == "backward"):
         #---------------------
@@ -338,37 +429,47 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
         lowerBtm.move_by(-getRes(), True)
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lb_init : dict = get_curr_config()
+        lb_intm : dict = get_curr_config()
         upperBtm.move_by(getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg): #repeatedly move UP upper
             intm_avg = cur_avg
+            lb_intm = get_curr_config()
             upperBtm.move_by(getRes()/2, True)
             iterations = iterations + 1
             cur_avg = timeAvgRead(N)
-        upperBtm.move_by(-getRes()/2, True)
+        # upperBtm.move_by(-getRes()/2, True)
+        reset_config(lb_intm)
         iterations = iterations - 1
         if(intm_avg > old_avg):
             walkBtmMode = "backward"
             return True
-        upperBtm.move_by(-getRes()/2 * iterations, True) #reset back to original
+        # upperBtm.move_by(-getRes()/2 * iterations, True) #reset back to original
+        reset_config(lb_init)
         #------
         intm_avg : float = timeAvgRead(N)
         iterations : int = 1
+        lb_init : dict = get_curr_config()
+        lb_intm : dict = get_curr_config()
         upperBtm.move_by(-getRes()/2, True)
         cur_avg : float = timeAvgRead(N)
         while(cur_avg > intm_avg): #repeatedly move down upper
             intm_avg = cur_avg
+            lb_intm = get_curr_config()
             upperBtm.move_by(-getRes()/2, True)
             iterations = iterations + 1
             cur_avg = timeAvgRead(N)
-        upperBtm.move_by(getRes()/2, True)
+        # upperBtm.move_by(getRes()/2, True)
+        reset_config(lb_intm)
         iterations = iterations - 1
         if(intm_avg > old_avg):
             walkBtmMode = "backward"
             return True
-        upperBtm.move_by(getRes()/2 * iterations, True) #reset back to original
-        #return lower to original
-        lowerBtm.move_by(getRes(), True)
+        # upperBtm.move_by(getRes()/2 * iterations, True) #reset back to original
+        # #return lower to original
+        # lowerBtm.move_by(getRes(), True)
+        reset_config(btm_knob_int)
 
     walkBtmMode = ""
     return False
