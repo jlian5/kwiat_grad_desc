@@ -6,6 +6,9 @@ from ThorlabsPM100 import ThorlabsPM100
 import thorlabs_apt as apt
 import inspect
 from typing import Callable
+import signal
+import sys
+
 
 #TODO Record start positions of each and log to file
 #TODO variable step size requires keeping track of previous steps, implement
@@ -134,6 +137,16 @@ def optimize_knob(knob,getRes : Callable[[float],float]) -> int:
     print(f"moved back {backward} times")
     return backward
 
+def plot_exit():
+    import matplotlib.pyplot as plt
+    plt.plot(reading)
+    plt.xlabel('# of motor increments')
+    plt.ylabel('normalized coupling efficiency')
+    plt.show()
+
+def signal_handler(sig, frame):
+    plot_exit()
+    sys.exit(0)
 #-----------
 def moveUpper(getRes : Callable[[float],float]) -> bool:
     print("Moving upper top knob")
@@ -228,6 +241,7 @@ res : int =  .0045
 iterationSingle : int = 1
 iterationWalk: int = 2
 initial : float = timeAvgRead(N)
+signal.signal(signal.SIGINT, signal_handler)
 print(f"initial reading is {initial}") 
 
 default_res = lambda : res
@@ -250,8 +264,4 @@ print(f"final reading is {timeAvgRead(N)}")
 
 
 
-import matplotlib.pyplot as plt
-plt.plot(reading)
-plt.xlabel('# of motor increments')
-plt.ylabel('normalized coupling efficiency')
-plt.show()
+plot_exit()
