@@ -3,7 +3,7 @@ import math
 import time
 import pyvisa as visa
 from ThorlabsPM100 import ThorlabsPM100
-import thorlabs_apt as apt
+import thorlabs_apt as apt # https://github.com/qpit/thorlabs_apt/blob/master/thorlabs_apt/core.py
 import inspect
 from typing import Callable
 import signal
@@ -21,7 +21,7 @@ p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
 p3Res = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res)
 p2 = ThorlabsPM100(inst=p2Res)
-ratio: float = .9815 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
+ratio: float = .989 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -38,14 +38,6 @@ lowerBtm = apt.Motor(lowerBtmSN)
 home_velocity = 1 #homing velocity
 home_position = 3 #homing offset
 
-# upperTop.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
-# upperBtm.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
-# lowerTop.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
-# lowerBtm.set_move_home_parameters(apt.HOME_REV, apt.HOMELIMSW_REV, home_velocity, home_position)
-# upperTop.move_home(True)
-# upperBtm.move_home(True)
-# lowerTop.move_home(True)
-# lowerBtm.move_home(True)
 #--------------------------------------------------------------------------------------------
 #Test step size:
 smUpTop = 5.25668
@@ -62,11 +54,6 @@ lowerBtmStart = 4.90438
 # lowerTop.move_to(lowerTopStart,True)
 # lowerBtm.move_to(lowerBtmStart,True)
 # exit()
-# print("take before calibration now")
-# for i in range(25):
-    # print(str(i) + "...")
-    # time.sleep(1)
-# ----------------------
 
 #aux variables
 N: int = 10 #number of power meter reads to average
@@ -74,8 +61,9 @@ N: int = 10 #number of power meter reads to average
 #aux functions
 #for graphing purposes
 reading: list = []#the reading at the i-th increment
+debug_cnt : int = 0
 def timeAvgRead(n : int) -> float:
-    global reading
+    global reading, debug_cnt
     tempSum : float = 0.0
     time.sleep(.1)
     for i in range(n):
@@ -84,18 +72,24 @@ def timeAvgRead(n : int) -> float:
 
     res: float = (tempSum / n) * ratio
     reading.append(res)
-    if __debug__:
-        print(f"caller is {inspect.stack()[1][3]}")
-        print(f"Current reading: {res} @ count {len(reading)}")
-        # input()
+
+    if __debug__ :
+        if debug_cnt == 0:
+            print("-----------------DEBUG---------------------------")
+            print(f"caller is {inspect.stack()[1][3]}")
+            print(f"Current reading: {res} @ count {len(reading)}")
+            print("-------------------------------------------------")
+            debug_cnt = int(input())
+        debug_cnt -= 1
+
     return res
 
-def my_getRes(baseRes : float = 0.005) -> float:
+def my_getRes(baseRes : float = 0.0185) -> float:
     global N
     curr : float = timeAvgRead(N)
     if ((1-curr)**2 * baseRes) < .00005:
         return .00005
-    return (1-curr)**2 * baseRes
+    return (1-curr) * baseRes
 
 def get_curr_config() -> dict:
     res : dict = {}
@@ -250,7 +244,7 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
 
 
 res : int =  .045
-iterationSingle : int = 0
+iterationSingle : int = 1
 iterationWalk: int =2
 initial : float = timeAvgRead(N)
 signal.signal(signal.SIGINT, signal_handler)
