@@ -40,10 +40,10 @@ home_position = 3 #homing offset
 
 #--------------------------------------------------------------------------------------------
 #Test step size:
-smUpTop = 5.25668
-smUpBtm = 4.83608
-smLowTop = 6.64995
-smLowBtm = 4.34177
+smUpTop = 5.1145
+smUpBtm = 5.5621
+smLowTop = 6.8305
+smLowBtm = 4.8758
 
 upperTopStart = 5.08984
 upperBtmStart = 5.55010
@@ -84,7 +84,7 @@ def timeAvgRead(n : int) -> float:
 
     return res
 
-def my_getRes(baseRes : float = 0.0185) -> float:
+def my_getRes(baseRes : float = 0.0085) -> float:
     global N
     curr : float = timeAvgRead(N)
     if ((1-curr)**2 * baseRes) < .00005:
