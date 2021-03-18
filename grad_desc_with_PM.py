@@ -17,11 +17,12 @@ import sys
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
-p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
+p2Res = rm.open_resource('USB0::0x1313::0x8078::P0019258::INSTR', timeout=0)
+# p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
 p3Res = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
-p3 = ThorlabsPM100(inst=p3Res)
+p3 = ThorlabsPM100(inst=p3Res) #p3 is the reflected port
 p2 = ThorlabsPM100(inst=p2Res)
-ratio: float = .989 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
+ratio: float = .978 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -40,19 +41,23 @@ home_position = 3 #homing offset
 
 #--------------------------------------------------------------------------------------------
 #Test step size:
-smUpTop = 5.1145
-smUpBtm = 5.5621
-smLowTop = 6.8305
-smLowBtm = 4.8758
+smUpTop = 5.2263
+smUpBtm = 5.5522
+smLowTop = 6.7272
+smLowBtm = 4.8638
 
 upperTopStart = 5.08984
 upperBtmStart = 5.55010
 lowerTopStart = 6.87527
 lowerBtmStart = 4.90438
-# upperTop.move_to(upperTopStart,True)
-# upperBtm.move_to(upperBtmStart,True)
-# lowerTop.move_to(lowerTopStart,True)
-# lowerBtm.move_to(lowerBtmStart,True)
+
+move : bool = False
+
+if move:
+    upperTop.move_to(smUpTop,True)
+    upperBtm.move_to(smUpBtm,True)
+    lowerTop.move_to(smLowTop,True)
+    lowerBtm.move_to(smLowBtm,True)
 # exit()
 
 #aux variables
@@ -65,7 +70,6 @@ debug_cnt : int = 0
 def timeAvgRead(n : int) -> float:
     global reading, debug_cnt
     tempSum : float = 0.0
-    time.sleep(.1)
     for i in range(n):
         time.sleep(.03)
         tempSum += (p2.read / p3.read)
@@ -84,10 +88,10 @@ def timeAvgRead(n : int) -> float:
 
     return res
 
-def my_getRes(baseRes : float = 0.0085) -> float:
+def my_getRes(baseRes : float = 0.01) -> float:
     global N
     curr : float = timeAvgRead(N)
-    if ((1-curr)**2 * baseRes) < .00005:
+    if ((1-curr) * baseRes) < .00005:
         return .00005
     return (1-curr) * baseRes
 
@@ -171,6 +175,7 @@ def walkTop(getRes : Callable[[float],float]) ->bool:
     print(f"\nwalking top with starting efficiency {timeAvgRead(N)}")
     top_knob_init : dict = get_curr_config()
     if(walkTopMode == "" or walkTopMode == "forward"):
+        print("going forwards")
         old_avg : float = timeAvgRead(N)
 
         lowerTop.move_by(1.5*getRes(), True) #move up lower top, 
@@ -179,13 +184,14 @@ def walkTop(getRes : Callable[[float],float]) ->bool:
 
         if(timeAvgRead(N) > old_avg):
             walkTopMode = "forward"
-            print(f"Finished walking top with efficiency {timeAvgRead(N)}")
+            print(f"Finished walking top(forwards) with efficiency {timeAvgRead(N)}")
             return True
         else:
             # walkTopMode = "" 
             reset_config(top_knob_init)
 
     if(walkTopMode == "" or walkTopMode == "backward"):
+        print("going backwards")
         old_avg : float = timeAvgRead(N)
 
         lowerTop.move_by(1.5*-getRes(), True) #move down lower top, then check upper
@@ -194,7 +200,7 @@ def walkTop(getRes : Callable[[float],float]) ->bool:
 
         if(timeAvgRead(N) > old_avg):
             walkTopMode = "backward"
-            print(f"Finished walking top with efficiency {timeAvgRead(N)}")
+            print(f"Finished walking top(backwards) with efficiency {timeAvgRead(N)}")
             return True
         else:
             reset_config(top_knob_init)
@@ -209,6 +215,7 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
     print(f"\nwalking btm with starting efficiency {timeAvgRead(N)}")
     btm_knob_int : dict = get_curr_config()
     if(walkBtmMode == "" or walkBtmMode == "forward"):
+        print("going forwards")
         old_avg : float = timeAvgRead(N)
         
         lowerBtm.move_by(1.5*getRes(), True) #move up lower btm, 
@@ -217,13 +224,14 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
 
         if(timeAvgRead(N) > old_avg):
             walkBtmMode = "forward"
-            print(f"Finished walking btm with efficiency {timeAvgRead(N)}")
+            print(f"Finished walking btm(forwards) with efficiency {timeAvgRead(N)}")
             return True
         else:
             # walkBtmMode = ""
             reset_config(btm_knob_int)
         
     if(walkBtmMode == "" or walkBtmMode == "backward"):
+        print("going backwards")
         old_avg : float = timeAvgRead(N) #move down lower Btm, then check upper
 
         lowerBtm.move_by(1.5*-getRes(), True)
@@ -232,7 +240,7 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
 
         if(timeAvgRead(N) > old_avg):
             walkBtmMode = "backward"
-            print(f"Finished walking btm with efficiency {timeAvgRead(N)}")
+            print(f"Finished walking btm(backwards) with efficiency {timeAvgRead(N)}")
             return True
         else:
             reset_config(btm_knob_int)
@@ -244,7 +252,7 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
 
 
 res : int =  .045
-iterationSingle : int = 1
+iterationSingle : int = 0
 iterationWalk: int =2
 initial : float = timeAvgRead(N)
 signal.signal(signal.SIGINT, signal_handler)
@@ -265,6 +273,7 @@ for i in range(iterationWalk):
         pass
 
 print(f"final reading is {timeAvgRead(N)}")
+print(f"final position is {get_curr_config()}")
 
 
 
