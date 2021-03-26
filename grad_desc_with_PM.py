@@ -17,12 +17,12 @@ import sys
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
-p2Res = rm.open_resource('USB0::0x1313::0x8078::P0019258::INSTR', timeout=0)
+p2Res = rm.open_resource('USB0::0x1313::0x8078::P0027255::INSTR', timeout=0)
 # p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
 p3Res = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res) #p3 is the reflected port
 p2 = ThorlabsPM100(inst=p2Res)
-ratio: float = .978 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
+ratio: float = .96 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
 print(apt.list_available_devices())
@@ -51,7 +51,7 @@ upperBtmStart = 5.55010
 lowerTopStart = 6.87527
 lowerBtmStart = 4.90438
 
-move : bool = False
+move : bool = True
 
 if move:
     upperTop.move_to(smUpTop,True)
@@ -61,7 +61,7 @@ if move:
 # exit()
 
 #aux variables
-N: int = 10 #number of power meter reads to average
+N: int = 50 #number of power meter reads to average
 
 #aux functions
 #for graphing purposes
@@ -70,8 +70,8 @@ debug_cnt : int = 0
 def timeAvgRead(n : int) -> float:
     global reading, debug_cnt
     tempSum : float = 0.0
+    time.sleep(.05)
     for i in range(n):
-        time.sleep(.03)
         tempSum += (p2.read / p3.read)
 
     res: float = (tempSum / n) * ratio
@@ -88,7 +88,7 @@ def timeAvgRead(n : int) -> float:
 
     return res
 
-def my_getRes(baseRes : float = 0.01) -> float:
+def my_getRes(baseRes : float = 0.02) -> float:
     global N
     curr : float = timeAvgRead(N)
     if ((1-curr) * baseRes) < .00005:
@@ -252,7 +252,7 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
 
 
 res : int =  .045
-iterationSingle : int = 0
+iterationSingle : int = 1
 iterationWalk: int =2
 initial : float = timeAvgRead(N)
 signal.signal(signal.SIGINT, signal_handler)
