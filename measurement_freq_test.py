@@ -8,6 +8,7 @@ rm = visa.ResourceManager()
 pm_rs = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
 pm = ThorlabsPM100(inst=pm_rs)
 import numpy as np
+import pandas as pd
 
 
 def getAvg(n : int, gap : int, data: list):
@@ -26,14 +27,18 @@ def getAvg(n : int, gap : int, data: list):
 
 
 def main():
-    Ns = np.arange(10, 100, 10)
+    Ns = np.flip(np.arange(10, 100, 10))
+    
     # times = np.linspace(0.0, 0.05, 21)
-    gaps = np.arange(1, 2, 3, 5, 10, 20, 30, 40, 50 ,60, 70, 80, 90)
-    NUM_SAMPLES = 20
+    gaps = np.array([1, 2, 3, 5, 10, 20, 30, 40, 50 ,60, 70, 80, 90])
+    # gaps = np.array([1, 2, 3, 5, 10, 20])
+
+    NUM_SAMPLES = 50
     measurement_data = []
     for sample_i in range(NUM_SAMPLES):
+        print(sample_i)
         sample = []
-        for itr in range(gaps[-1] * Ns[-1]):
+        for itr in range(gaps[-1] * Ns[0]):
             sample.append(pm.read)
         measurement_data.append(sample)
 
@@ -51,8 +56,12 @@ def main():
 
     import matplotlib.pyplot as plt
     import seaborn as sns
-    ax = sns.heatmap(sigmas)
+    df = pd.DataFrame(sigmas, columns=gaps, index=Ns)
+    # df = df.pivot("gap b/n measurement", "# of measurement", "std.dev of 20 measurements")
+    ax = sns.heatmap(df,annot=True, fmt=".3g")
+    ax.set(xlabel="gap b/n measurement", ylabel='# of measurement')
     ax.plot()
+
     plt.show()
 
     return
