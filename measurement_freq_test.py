@@ -7,48 +7,56 @@ import signal
 rm = visa.ResourceManager()
 pm_rs = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
 pm = ThorlabsPM100(inst=pm_rs)
-
 import numpy as np
-Ns = np.arange(10, 100, 10)
-times = np.linspace(0.0, 0.05, 21)
 
-NUM_SAMPLES = 20
-sigmas = np.zeros((len(Ns), len(times)))
 
-def getAvg(n : int, time_btn_read : float):
+def getAvg(n : int, gap : int, data: list):
     total = 0.0
-    for count in range(n):
-        time.sleep(time_btn_read)
-        total += pm.read
-        
+
+    idx = 0
+    count = 0
+    while count < n:
+        total += data[idx]
+        idx += gap
+        count += 1
+    
     # print(total/n)
     return total / n
 
-# for i in range(len(Ns)):
-#     print(f"i: {i} of {len(Ns)}")
-#     n = Ns[i]
-#     for j in range(len(times)):
-#         print(f"\tj: {j} of {len(times)}")
-#         t = times[j]
-#         data = np.array([getAvg(n, t) for i in range(NUM_SAMPLES)])
-#         sigmas[i][j] = np.std(data)
-#         print(sigmas[i][j])
-
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# ax = sns.heatmap(sigmas)
-# ax.plot()
-# plt.show()
-ms = []
-def sig_handle():
-    global ms
-    print(len(ms))
-
-signal.signal(signal.SIGALRM, sig_handle)
-signal.alarm(0.1)
-while True:
-    ms += pm.read
 
 
+def main():
+    Ns = np.arange(10, 100, 10)
+    # times = np.linspace(0.0, 0.05, 21)
+    gaps = np.arange(1, 2, 3, 5, 10, 20, 30, 40, 50 ,60, 70, 80, 90)
+    NUM_SAMPLES = 20
+    measurement_data = []
+    for sample_i in range(NUM_SAMPLES):
+        sample = []
+        for itr in range(gaps[-1] * Ns[-1]):
+            sample.append(pm.read)
+        measurement_data.append(sample)
+
+
+    sigmas = np.zeros((len(Ns), len(gaps)))
+    for i in range(len(Ns)):
+        print(f"i: {i} of {len(Ns)}")
+        n = Ns[i]
+        for j in range(len(gaps)):
+            print(f"\tj: {j} of {len(gaps)}")
+            gap = gaps[j]
+            data_i = np.array([getAvg(n, gap, measurement_data[i]) for i in range(NUM_SAMPLES)])
+            sigmas[i][j] = np.std(data_i)
+            # print(sigmas[i][j])
+
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    ax = sns.heatmap(sigmas)
+    ax.plot()
+    plt.show()
+
+    return
 
             
+if __name__ == "__main__":
+    main()
