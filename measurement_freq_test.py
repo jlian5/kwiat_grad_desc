@@ -30,7 +30,7 @@ def main():
     Ns = np.flip(np.arange(10, 100, 10))
     
     # times = np.linspace(0.0, 0.05, 21)
-    gaps = np.array([1, 2, 3, 5, 10, 20, 30, 40, 50 ,60, 70, 80, 90])
+    gaps = np.array([1, 2, 3, 5, 10, 20, 30, 40, 50 ,60, 70, 80, 90,100,150,200])
     # gaps = np.array([1, 2, 3, 5, 10, 20])
 
     NUM_SAMPLES = 50
