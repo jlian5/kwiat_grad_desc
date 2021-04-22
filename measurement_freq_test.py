@@ -24,7 +24,7 @@ def getAvg(n : int, gap : int, data: list):
     # print(total/n)
     return total / n
 
-
+#.150-.200 mW
 
 def main():
     Ns = np.flip(np.arange(10, 100, 10))
@@ -42,7 +42,7 @@ def main():
             sample.append(pm.read)
         measurement_data.append(sample)
 
-
+    percent = np.zeros((len(Ns), len(gaps)))
     sigmas = np.zeros((len(Ns), len(gaps)))
     for i in range(len(Ns)):
         print(f"i: {i} of {len(Ns)}")
@@ -52,11 +52,12 @@ def main():
             gap = gaps[j]
             data_i = np.array([getAvg(n, gap, measurement_data[i]) for i in range(NUM_SAMPLES)])
             sigmas[i][j] = np.std(data_i)
+            percent[i][j] = sigmas[i][j] / np.mean(data_i)
             # print(sigmas[i][j])
 
     import matplotlib.pyplot as plt
     import seaborn as sns
-    df = pd.DataFrame(sigmas, columns=gaps, index=Ns)
+    df = pd.DataFrame(percent, columns=gaps, index=Ns)
     # df = df.pivot("gap b/n measurement", "# of measurement", "std.dev of 20 measurements")
     ax = sns.heatmap(df,annot=True, fmt=".3g")
     ax.set(xlabel="gap b/n measurement", ylabel='# of measurement')
