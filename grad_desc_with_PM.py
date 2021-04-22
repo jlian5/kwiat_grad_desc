@@ -17,8 +17,8 @@ import sys
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
-p2Res = rm.open_resource('USB0::0x1313::0x8078::P0027255::INSTR', timeout=0)
-# p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
+# p2Res = rm.open_resource('USB0::0x1313::0x8078::P0027255::INSTR', timeout=0)
+p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
 p3Res = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res) #p3 is the reflected port
 p2 = ThorlabsPM100(inst=p2Res)
@@ -51,7 +51,7 @@ upperBtmStart = 5.55010
 lowerTopStart = 6.87527
 lowerBtmStart = 4.90438
 
-move : bool = True
+move : bool = False
 
 if move:
     upperTop.move_to(smUpTop,True)
@@ -61,7 +61,7 @@ if move:
 # exit()
 
 #aux variables
-N: int = 50 #number of power meter reads to average
+N: int = 10 #number of power meter reads to average
 
 #aux functions
 #for graphing purposes
@@ -88,12 +88,13 @@ def timeAvgRead(n : int) -> float:
 
     return res
 
-def my_getRes(baseRes : float = 0.02) -> float:
+def my_getRes(baseRes : float = 0.0005) -> float:
     global N
     curr : float = timeAvgRead(N)
-    if ((1-curr) * baseRes) < .00005:
+    res = np.exp(-1/2 * (1-curr))* baseRes
+    if (res) < .00005:
         return .00005
-    return (1-curr)**2 * baseRes
+    return res * baseRes
 
 def get_curr_config() -> dict:
     res : dict = {}
