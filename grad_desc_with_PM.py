@@ -46,11 +46,11 @@ smUpBtm = 5.5522
 smLowTop = 6.7272
 smLowBtm = 4.8638
 
-upperTopStart = 5.08984
-upperBtmStart = 5.55010
-lowerTopStart = 6.87527
-lowerBtmStart = 4.90438
-
+upperTopStart = 5.280958652496338
+upperBtmStart = 5.671262741088867
+lowerTopStart = 6.619606971740723
+lowerBtmStart = 4.962890625
+#5.404588222503662, 'ub': 5.590660095214844, 'lt': 6.489068508148193, 'lb': 4.877477645874023
 move : bool = False
 
 if move:
@@ -67,23 +67,22 @@ N: int = 10 #number of power meter reads to average
 #for graphing purposes
 reading: list = []#the reading at the i-th increment
 sigmas: list = [] #the std.dev of the i-th increment
-delta_i: list = [1] #change in reading at the i-th increment
+delta_i: list = [] #change in reading at the i-th increment
 debug_cnt : int = 0
 def timeAvgRead(n : int) -> float:
     global reading, sigmas, delta_i, debug_cnt
-    # tempSum : float = 0.0
     temp_readings: list= []
     time.sleep(.05)
     for i in range(n):
         temp_readings.append((p2.read / p3.read) * ratio)
-        # tempSum += (p2.read / p3.read)
 
-    # res: float = (tempSum / n) * ratio
     temp_readings = np.array(temp_readings)
-    reading.append(np.mean(temp_readings))
-    sigmas.append(np.std(temp_readings))
+    mean = np.mean(temp_readings)
+    reading.append(mean)
+    sigmas.append(np.std(temp_readings) / mean)
 
-    delta_i.append( (temp_readings[-1] - temp_readings[-2]) / temp_readings[-2])
+    if(len(reading) > 1):
+        delta_i.append( (temp_readings[-1] - temp_readings[-2]) / temp_readings[-2])
 
     if __debug__ :
         if debug_cnt == 0:
@@ -94,15 +93,16 @@ def timeAvgRead(n : int) -> float:
             debug_cnt = int(input())
         debug_cnt -= 1
 
-    return res
+    return mean
 
 def my_getRes(baseRes : float = 0.0005) -> float:
     global N
     curr : float = timeAvgRead(N)
     res = np.exp(-1/2 * (1-curr))* baseRes
+    # res = (1 - curr) ** 2 * baseRes
     if (res) < .00005:
         return .00005
-    return res * baseRes
+    return res
 
 def get_curr_config() -> dict:
     res : dict = {}
@@ -292,7 +292,7 @@ def walk_optimize_inner(inner_record: str, knob, getRes) -> str:
     return inner_record
 
 res : int =  .045
-iterationSingle : int = 0
+iterationSingle : int = 1
 iterationWalk: int =2
 initial : float = timeAvgRead(N)
 signal.signal(signal.SIGINT, signal_handler)
