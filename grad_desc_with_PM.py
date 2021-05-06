@@ -66,16 +66,24 @@ N: int = 10 #number of power meter reads to average
 #aux functions
 #for graphing purposes
 reading: list = []#the reading at the i-th increment
+sigmas: list = [] #the std.dev of the i-th increment
+delta_i: list = [1] #change in reading at the i-th increment
 debug_cnt : int = 0
 def timeAvgRead(n : int) -> float:
-    global reading, debug_cnt
-    tempSum : float = 0.0
+    global reading, sigmas, delta_i, debug_cnt
+    # tempSum : float = 0.0
+    temp_readings: list= []
     time.sleep(.05)
     for i in range(n):
-        tempSum += (p2.read / p3.read)
+        temp_readings.append((p2.read / p3.read) * ratio)
+        # tempSum += (p2.read / p3.read)
 
-    res: float = (tempSum / n) * ratio
-    reading.append(res)
+    # res: float = (tempSum / n) * ratio
+    temp_readings = np.array(temp_readings)
+    reading.append(np.mean(temp_readings))
+    sigmas.append(np.std(temp_readings))
+
+    delta_i.append( (temp_readings[-1] - temp_readings[-2]) / temp_readings[-2])
 
     if __debug__ :
         if debug_cnt == 0:
@@ -142,6 +150,20 @@ def plot_exit():
     plt.plot(reading)
     plt.xlabel('# of motor increments')
     plt.ylabel('normalized coupling efficiency')
+    plt.show()
+
+    plt.clf()
+    plt.plot(sigmas)
+    plt.xlabel('# of motor increments')
+    plt.ylabel('std.dev of normalized coupling efficiency')
+    plt.show()
+
+    plt.clf()
+    temp_delta_i = np.array(delta_i)
+    delta_i[0] = np.mean(temp_delta_i[1:])
+    plt.plot(delta_i)
+    plt.xlabel('# of motor increments')
+    plt.ylabel('change in normalized coupling efficiency')
     plt.show()
 
 def signal_handler(sig, frame):
