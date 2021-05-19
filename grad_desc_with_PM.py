@@ -82,7 +82,7 @@ def timeAvgRead(n : int) -> float:
     sigmas.append(np.std(temp_readings) / mean)
 
     if(len(reading) > 1):
-        delta_i.append( (temp_readings[-1] - temp_readings[-2]) / temp_readings[-2])
+        delta_i.append( (reading[-1] - reading[-2]) / reading[-2])
 
     if __debug__ :
         if debug_cnt == 0:
@@ -148,6 +148,15 @@ def optimize_knob(knob,getRes : Callable[[float],float]) -> int:
 def plot_exit():
     import matplotlib.pyplot as plt
     plt.plot(reading)
+    upper = []
+    lower = []
+    for i in range(len(reading)):
+        std_dev_i = sigmas[i] * reading[i]
+        upper.append(reading + std_dev_i)
+        lower.append(reading - std_dev_i)
+
+    plt.plot(upper, '--')
+    plt.plot(lower, '--')
     plt.xlabel('# of motor increments')
     plt.ylabel('normalized coupling efficiency')
     plt.show()
