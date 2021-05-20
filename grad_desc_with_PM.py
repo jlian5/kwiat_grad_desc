@@ -18,10 +18,10 @@ import sys
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
 # p2Res = rm.open_resource('USB0::0x1313::0x8078::P0027255::INSTR', timeout=0)
-p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025003::INSTR', timeout=0)
+p2Res = rm.open_resource('USB0::0x1313::0x8078::P0025384::INSTR', timeout=0)
 p3Res = rm.open_resource('USB::0x1313::0x8078::P0027638::INSTR', timeout=0)
 p3 = ThorlabsPM100(inst=p3Res) #p3 is the reflected port
-p2 = ThorlabsPM100(inst=p2Res)
+p2 = ThorlabsPM100(inst=p2Res)#p2 is the port we are coupling into
 ratio: float = .96 #measured before hand p3 / p1 where p1 is the free space measurement before measurement fiber
 
 #----------- Initialising mirror motors----------------------------------#
@@ -50,14 +50,14 @@ upperTopStart = 5.280958652496338
 upperBtmStart = 5.671262741088867
 lowerTopStart = 6.619606971740723
 lowerBtmStart = 4.962890625
-#5.404588222503662, 'ub': 5.590660095214844, 'lt': 6.489068508148193, 'lb': 4.877477645874023
-move : bool = False
+#'ut': 5.338590145111084, 'ub': 5.657590866088867, 'lt': 6.544309616088867, 'lb': 4.964610576629639
+move : bool = True
 
 if move:
-    upperTop.move_to(smUpTop,True)
-    upperBtm.move_to(smUpBtm,True)
-    lowerTop.move_to(smLowTop,True)
-    lowerBtm.move_to(smLowBtm,True)
+    upperTop.move_to(upperTopStart,True)
+    upperBtm.move_to(upperBtmStart,True)
+    lowerTop.move_to(lowerTopStart,True)
+    lowerBtm.move_to(lowerBtmStart,True)
 # exit()
 
 #aux variables
@@ -95,7 +95,7 @@ def timeAvgRead(n : int) -> float:
 
     return mean
 
-def my_getRes(baseRes : float = 0.0005) -> float:
+def my_getRes(baseRes : float = 0.005) -> float:
     global N
     curr : float = timeAvgRead(N)
     res = np.exp(-1/2 * (1-curr))* baseRes
@@ -147,14 +147,25 @@ def optimize_knob(knob,getRes : Callable[[float],float]) -> int:
 
 def plot_exit():
     import matplotlib.pyplot as plt
-    plt.plot(reading)
+    # plt.plot(reading)
+    err = []
     upper = []
     lower = []
     for i in range(len(reading)):
         std_dev_i = sigmas[i] * reading[i]
-        upper.append(reading + std_dev_i)
-        lower.append(reading - std_dev_i)
+        err.append(std_dev_i)
+        upper.append(reading[i] + std_dev_i)
+        lower.append(reading[i] - std_dev_i)
 
+    # plt.plot(upper, '--')
+    # plt.plot(lower, '--')
+    plt.errorbar(range(len(reading)), reading, yerr=err)
+    plt.xlabel('# of motor increments')
+    plt.ylabel('normalized coupling efficiency')
+    plt.show()
+
+    plt.clf()
+    plt.plot(reading)
     plt.plot(upper, '--')
     plt.plot(lower, '--')
     plt.xlabel('# of motor increments')
