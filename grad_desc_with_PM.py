@@ -10,10 +10,9 @@ import signal
 import sys
 
 
-#TODO Record start positions of each and log to file
-#TODO variable step size requires keeping track of previous steps, implement
+#!!!!!run with
+#python -O grad_desc_with_PM.py
 
-#TODO TEST DEBUGGING STATEMENTS
 
 #---------- Initialising Powermeter reading & USB connections -----------#
 rm = visa.ResourceManager()
@@ -40,7 +39,7 @@ home_velocity = 1 #homing velocity
 home_position = 3 #homing offset
 
 #--------------------------------------------------------------------------------------------
-#Test step size:
+#Below are some positions to give initial coupling
 smUpTop = 5.2263
 smUpBtm = 5.5522
 smLowTop = 6.7272
@@ -51,7 +50,8 @@ upperBtmStart = 5.671262741088867
 lowerTopStart = 6.619606971740723
 lowerBtmStart = 4.962890625
 #'ut': 5.338590145111084, 'ub': 5.657590866088867, 'lt': 6.544309616088867, 'lb': 4.964610576629639
-move : bool = True
+
+move : bool = True #set this to True to go to the position
 
 if move:
     upperTop.move_to(upperTopStart,True)
@@ -70,6 +70,9 @@ sigmas: list = [] #the std.dev of the i-th increment
 delta_i: list = [] #change in reading at the i-th increment
 debug_cnt : int = 0
 def timeAvgRead(n : int) -> float:
+
+    """This function take n measurements and average them together"""
+
     global reading, sigmas, delta_i, debug_cnt
     temp_readings: list= []
     time.sleep(.05)
@@ -96,6 +99,9 @@ def timeAvgRead(n : int) -> float:
     return mean
 
 def my_getRes(baseRes : float = 0.005) -> float:
+
+    """this is the dynamically adjusted step function, higher the coupling efficiency, lower step size"""
+
     global N
     curr : float = timeAvgRead(N)
     res = np.exp(-1/2 * (1-curr))* baseRes
@@ -119,6 +125,11 @@ def reset_config(target : dict):
     lowerBtm.move_to(target["lb"], True)
 
 def optimize_direction(knob, getRes : Callable[[float],float], forward: bool) -> int:
+
+    """
+    Take a knob, keep moving it either forward/backward until the coupling efficiency stop increasing
+    """
+
     multiplier : int = 1 if forward else -1
     iterations : int = 0
     init_reading : float = timeAvgRead(N)
@@ -129,7 +140,7 @@ def optimize_direction(knob, getRes : Callable[[float],float], forward: bool) ->
         knob.move_by( multiplier * getRes(), True)
         # print(f"timeavg { timeAvgRead(N)} initial {init_reading}")
         if timeAvgRead(N) < curr_reading:
-            reset_config(intm_pos)
+            reset_config(intm_pos) #if the current average is not as good as before, exit function
             break
         else:
             iterations += 1
@@ -137,6 +148,11 @@ def optimize_direction(knob, getRes : Callable[[float],float], forward: bool) ->
     return iterations
 
 def optimize_knob(knob,getRes : Callable[[float],float]) -> int:
+
+    """
+    take a knob, check to see if moving forward maximizes its coupling efficiency, if not, move it backwards
+    """
+
     forward: int = optimize_direction(knob, getRes, True)
     if(forward > 0):    
         print(f"\t moved forward {forward} times")
@@ -146,6 +162,9 @@ def optimize_knob(knob,getRes : Callable[[float],float]) -> int:
     return -backward
 
 def plot_exit():
+    """
+    when ctrl-c is pressed or the code is exiting, this will be called to graph
+    """
     import matplotlib.pyplot as plt
     # plt.plot(reading)
     err = []
@@ -189,8 +208,14 @@ def plot_exit():
 def signal_handler(sig, frame):
     plot_exit()
     sys.exit(0)
-#-----------
+
+    
+#----------- main functions--------
+
 def moveUpper(getRes : Callable[[float],float]) -> bool:
+    """
+    take the upper mirror, optimizes both upper and lower knobs
+    """
     print("\nMoving upper top knob")
     top: int = optimize_knob(upperTop, getRes)
     print(f"reading is {timeAvgRead(N)}")
@@ -202,6 +227,9 @@ def moveUpper(getRes : Callable[[float],float]) -> bool:
     return (abs(top) > 0 or abs(btm) > 0)
 
 def moveLower(getRes : Callable[[float],float]) -> bool:
+    """
+    take the lower mirror, optimizes both upper and lower knobs
+    """
     print("\nMoving lower top knob")
     top: int = optimize_knob(lowerTop, getRes)
     print(f"reading is {timeAvgRead(N)}")
@@ -215,6 +243,20 @@ def moveLower(getRes : Callable[[float],float]) -> bool:
 walkTopMode: str = ""
 walkTopInner: str = ""
 def walkTop(getRes : Callable[[float],float]) ->bool:
+
+    """
+    Using the top knob of both mirrors, detune the coarse knob either forward/backward,
+    then optimize the fine knob using optimize_knob() to see if reading is higher then before,
+    if it is, then we succeeded in walking the beam, if not, reset the setup to the state when the
+    function is called, then detune in the other direction.
+
+    Note:
+    the global variables walkTopMode and walkTopInner are used to memorize which direction the 
+    coarse/fine mirror moved the previous function call, so it is efficient.
+
+    walkTopInner is passed into the walk_optimize_inner() function
+    """
+
     global walkTopMode, walkTopInner
     print(f"\nwalking top with starting efficiency {timeAvgRead(N)}")
     top_knob_init : dict = get_curr_config()
@@ -293,6 +335,13 @@ def walkBtm(getRes : Callable[[float],float]) -> bool:
     return False
 
 def walk_optimize_inner(inner_record: str, knob, getRes) -> str:
+
+    """
+    basically the same as optimize_knob, but uses the inner_record string to avoid 
+    unneccesary trial-and-error. Also return the new inner_record to be used next time the
+    function is called.
+    """
+
     print(f"\tinner string is {inner_record}")
     if inner_record == "":
             print("\tinner string unset, finding direction now...")
